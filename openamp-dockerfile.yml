@@ -1,0 +1,62 @@
+# Build OpenAMP within Xilinx network
+#
+# VERSION 0.0.1
+#
+
+FROM ubuntu:16.04
+
+# Install tools
+# Install add-apt-repository
+RUN apt-get update || echo "ignore update error"
+RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev cmake \
+    wget xz-utils unzip libpython2.7 vim sudo
+
+# Get generic ARM toolchain
+ARG ARM_GCC_NONE_COMPILER_PKG=gcc-arm-embedded_7-2018q2-1~trusty1_amd64.deb
+RUN mkdir -p compilers && \
+    wget -P compilers http://ppa.launchpad.net/team-gcc-arm-embedded/ppa/ubuntu/pool/main/g/gcc-arm-none-eabi/${ARM_GCC_NONE_COMPILER_PKG} && \
+    dpkg -i compilers/${ARM_GCC_NONE_COMPILER_PKG}
+
+# Add user tester
+RUN useradd -ms /bin/bash --groups sudo tester
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER tester
+WORKDIR /home/tester
+ARG BASEDIR=/home/tester
+
+# Disable SSL verify
+RUN git config --global http.sslVerify false
+
+# Download tools to build Zephyr
+ARG ZEPHYR_SDK_VERSION=0.9.3
+ARG ZEPHYR_SDK_SETUP_BINARY=zephyr-sdk-${ZEPHYR_SDK_VERSION}-setup.run
+ARG ZEPHYR_SDK_DOWNLOAD_FOLDER=https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZEPHYR_SDK_VERSION}
+ENV ZEPHYR_SDK_INSTALL_DIR ${BASEDIR}/zephyr/zephyr-sdk
+# Download Zephyr setup binary
+RUN mkdir -p zephyr && \
+    wget -P zephyr/ ${ZEPHYR_SDK_DOWNLOAD_FOLDER}/${ZEPHYR_SDK_SETUP_BINARY} && \
+    chmod +x zephyr/${ZEPHYR_SDK_SETUP_BINARY} && \
+    rm -rf ${ZEPHYR_SDK_INSTALL_DIR} && \
+    zephyr/${ZEPHYR_SDK_SETUP_BINARY} -- -y -d ${ZEPHYR_SDK_INSTALL_DIR}
+
+
+# Download repo command
+RUN mkdir -p bin
+RUN wget https://storage.googleapis.com/git-repo-downloads/repo --no-check-certificate && \
+    mv repo bin/ && chmod +x bin/repo
+ARG PATH
+ENV PATH /home/tester/bin:${PATH}
+
+# Initialize yocto repos
+RUN mkdir -p yocto
+RUN cd yocto && repo init --depth 1 -u https://github.com/OpenAMP/openamp-yocto-manifests.git && repo sync
+
+# Get FreeRTOS tools
+ARG FREERTOS_VERSION=10.0.1
+ARG FREERTOS_ZIP=FreeRTOSv${FREERTOS_VERSION}.zip
+ARG FREERTOS_ZIP_URL=https://cfhcable.dl.sourceforge.net/project/freertos/FreeRTOS/V${FREERTOS_VERSION}/${FREERTOS_ZIP}
+RUN mkdir -p freertos && \
+    wget -P freetros/ ${FREERTOS_ZIP_URL} \
+    unzip freertos/${FREERTOS_ZIP} -d freertos
+
+

@@ -1,0 +1,17 @@
+language: minimal # setting language to C will override cross-compiler and fail
+
+sudo: required
+
+services:
+  - docker
+
+jobs:
+  include:
+    - statge: build docker image
+      script:
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker build -f openamp-xilinx-dockerfile.yml -t travis-ci-stage-image .
+        - docker tag travis-ci-stage-image ${DOCKER_USERNAME}/openamp:latest
+        - docker push ${DOCKER_USERNAME}/openamp:latest
+    - stage: test
+      script: docker run --rm ${DOCKER_USERNAME}/openamp:latest echo "Successfully build docker image."
