@@ -14,4 +14,4 @@ jobs:
         - docker tag travis-ci-stage-image ${DOCKER_USERNAME}/openamp-xilinx:latest
         - docker push ${DOCKER_USERNAME}/openamp-xilinx:latest
     - stage: test
-      script: docker run --rm ${DOCKER_USERNAME}/openamp:latest echo "Successfully build docker image."
+      script: docker run --rm ${DOCKER_USERNAME}/openamp-xilinx:latest echo "Successfully build docker image."
