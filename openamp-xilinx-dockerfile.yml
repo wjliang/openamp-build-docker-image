@@ -1,0 +1,53 @@
+# Build OpenAMP within Xilinx network
+#
+# VERSION 0.0.1
+#
+
+FROM ubuntu:16.04
+
+# Setup proxy
+#ENV http_proxy http://proxy.xilinx.com:8080
+#ENV https_proxy https://proxy.xilinx.com:8080
+
+# Install tools
+# Install add-apt-repository
+RUN apt-get update || echo "ignore update error"
+RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev cmake \
+    wget xz-utils unzip libpython2.7 vim sudo
+
+# Get generic ARM toolchain
+ARG ARM_GCC_NONE_COMPILER_PKG=gcc-arm-embedded_7-2018q2-1~trusty1_amd64.deb
+RUN mkdir -p compilers && \
+    wget -P compilers http://ppa.launchpad.net/team-gcc-arm-embedded/ppa/ubuntu/pool/main/g/gcc-arm-none-eabi/${ARM_GCC_NONE_COMPILER_PKG} && \
+    dpkg -i compilers/${ARM_GCC_NONE_COMPILER_PKG}
+
+# Add user tester
+RUN useradd -ms /bin/bash --groups sudo tester
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER tester
+WORKDIR /home/tester
+ARG BASEDIR=/home/tester
+
+# Disable SSL verify
+RUN git config --global http.sslVerify false
+# Setup git proxy
+#RUN git config --global http.proxy http://proxy.xilinx.com:8080
+#RUN git config --global https.proxy https://proxy.xilinx.com:8080
+
+# Download repo command
+RUN mkdir -p bin
+RUN wget https://storage.googleapis.com/git-repo-downloads/repo --no-check-certificate && \
+    mv repo bin/ && chmod +x bin/repo
+ARG PATH
+ENV PATH /home/tester/bin:${PATH}
+
+# Initialize yocto repos
+RUN mkdir -p yocto
+RUN cd yocto && \
+    repo init -u https://github.com/OpenAMP/openamp-yocto-manifests.git -b xilinx/master && \
+    repo sync
+
+# Build yocto image
+RUN source sources/core/oe-init-build-env && \
+    echo "include conf/xlnx.conf" >> conf/local.conf && \
+    MACHINE=zcu102-zynqmp bitbake core-image-minimal
