@@ -9,6 +9,7 @@ FROM ubuntu:16.04
 #ENV http_proxy http://proxy.xilinx.com:8080
 #ENV https_proxy https://proxy.xilinx.com:8080
 
+
 # Install tools
 # Install add-apt-repository
 RUN apt-get update || echo "ignore update error"
@@ -47,8 +48,13 @@ RUN cd yocto && \
     repo init -u https://github.com/OpenAMP/openamp-yocto-manifests.git -b xilinx/master && \
     repo sync
 
+# Default shell to bash
+ENV SHELL "/bin/bash"
+
 # Build yocto image
 RUN cd yocto && \
+    export TEMPLATECONF=$(pwd)/sources/meta-openamp-test-xilinx/conf && \
     . sources/core/oe-init-build-env && \
-    echo "include conf/xlnx.conf" >> conf/local.conf && \
+    cat conf/bblayers.conf && \
+    echo include conf/xlnx.conf >> conf/local.conf && \
     MACHINE=zcu102-zynqmp bitbake core-image-minimal
