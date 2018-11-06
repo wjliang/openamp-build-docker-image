@@ -11,7 +11,7 @@ jobs:
       script:
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker build -f openamp-xilinx-dockerfile.yml -t travis-ci-stage-image .
-        - docker tag travis-ci-stage-image ${DOCKER_USERNAME}/openamp:latest
+        - docker tag travis-ci-stage-image ${DOCKER_USERNAME}/openamp-xilinx:latest
         - docker push ${DOCKER_USERNAME}/openamp-xilinx:latest
     - stage: test
       script: docker run --rm ${DOCKER_USERNAME}/openamp:latest echo "Successfully build docker image."
