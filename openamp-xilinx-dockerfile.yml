@@ -13,8 +13,9 @@ FROM ubuntu:16.04
 # Install tools
 # Install add-apt-repository
 RUN apt-get update || echo "ignore update error"
-RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev locales cmake \
-    wget xz-utils unzip libpython2.7 vim sudo
+RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev \
+    locales cmake wget xz-utils unzip libpython2.7 vim sudo bzip2 chrpath \
+    cpio diffstat g++ gawk texinfo
 
 # Get generic ARM toolchain
 ARG ARM_GCC_NONE_COMPILER_PKG=gcc-arm-embedded_7-2018q2-1~trusty1_amd64.deb
