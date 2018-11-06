@@ -9,7 +9,7 @@ jobs:
   include:
     - statge: build docker image
       script:
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - docker build -f openamp-xilinx-dockerfile.yml -t travis-ci-stage-image .
         - docker tag travis-ci-stage-image ${DOCKER_USERNAME}/openamp-xilinx:latest
         - docker push ${DOCKER_USERNAME}/openamp-xilinx:latest
