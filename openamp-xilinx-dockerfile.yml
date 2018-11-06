@@ -48,6 +48,6 @@ RUN cd yocto && \
     repo sync
 
 # Build yocto image
-RUN source sources/core/oe-init-build-env && \
+RUN . sources/core/oe-init-build-env && \
     echo "include conf/xlnx.conf" >> conf/local.conf && \
     MACHINE=zcu102-zynqmp bitbake core-image-minimal
