@@ -13,7 +13,7 @@ FROM ubuntu:16.04
 # Install tools
 # Install add-apt-repository
 RUN apt-get update || echo "ignore update error"
-RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev cmake \
+RUN apt-get -y install git python python3 libsysfs-dev libhugetlbfs-dev locales cmake \
     wget xz-utils unzip libpython2.7 vim sudo
 
 # Get generic ARM toolchain
@@ -28,6 +28,15 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER tester
 WORKDIR /home/tester
 ARG BASEDIR=/home/tester
+ENV SHELL "/bin/bash"
+
+# Set the locale
+RUN sudo touch /usr/share/locale/locale.alias
+RUN sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    sudo locale-gen && sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_UTF-8
+ENV LC_ALL en_US.UTF-8
 
 # Disable SSL verify
 RUN git config --global http.sslVerify false
@@ -52,8 +61,8 @@ RUN cd yocto && \
 
 # Build yocto image
 RUN ["/bin/bash", "-c", "cd yocto && \
+    export LANG=en_US.UTF-8 LANGUAGE=en_UTF-8 LC_ALL=en_US.UTF-8 && \
     export TEMPLATECONF=$(pwd)/sources/meta-openamp-test-xilinx/conf && \
     . sources/core/oe-init-build-env && \
-    cat conf/bblayers.conf && \
     MACHINE=zcu102-zynqmp bitbake core-image-minimal \
     "]
